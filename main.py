@@ -1,12 +1,31 @@
 import sys
 import os
 import datetime
+import time
 import praw
 import twitter
+import json
+import urllib2
 from twython import TwythonStreamer
 from string import Template
 
+NoPost = False
 
+def check_connection():
+    try:
+        urllib2.urlopen('https://twitter.com/')
+        return True
+    except urllib2.URLError as e:
+        return False
+for arg in sys.argv:
+    if(arg.lower() == '-n'):
+        NoPost = True
+        print("---Posting disabled")
+
+if(not check_connection()):
+    print('Twitter is down or (more likely) yo internet broke')
+    sys.exit(1)
+    
 name = 'TweetArchiveBot'
 
 cons_key = os.environ.get("TWIT_CONS_KEY")
@@ -28,17 +47,45 @@ bot = praw.Reddit(user_agent='TweetArchiveBotv0.1',
         username=os.environ.get("BOT_USERNAME"),
         password=os.environ.get("BOT_PASSWORD"))
 
-subreddit = bot.subreddit('TweetArchiver')
-comments = subreddit.stream.comments()
 
-followers = []
-print("Starting Tweet Archiver at %s" %datetime.datetime.now())
-print("Following:")
-for user in api.GetFriends():
-    print("\t" + user.name)
-    followers.append(user.id_str)
+subreddit = bot.subreddit('TweetArchiver')
+#comments = subreddit.stream.comments()
+
+def getFollowers():
+    followers = []
+    for user in api.GetFriends():
+        print("\t" + user.name)
+        followers.append(user.id_str)
+    return followers
+    #    print("Program set to track the following users")
+    #    for i in followers:
+    #        print(i)
+
+def reddit_format(text):
+        text = text.replace('&amp;', '&')
+        text = '>' + text
+        i = 0
+        while(i < len(text)-1):
+            if(text[i] == '\n'):
+                if(text[i+1] !='\n'):
+                    modified = text[:i] + "  " + text[i:]
+                    text = modified
+                    i = i + 2
+                else:
+                    while(i < len(text)-1 and text[i+1] == '\n'):
+                        i = i + 1
+                i = i + 1
+                modified = text[:i] + '>' + text[i:]
+                text = modified
+            i = i + 1
+        return text
 
 class tStream(TwythonStreamer):
+    followers = []
+
+    def set_followers(self, followers):
+        self.followers = followers
+
     def PostTweetToReddit(self, data):
         u = "https://twitter.com/" + data['user']['screen_name'] + "/status/" + data['id_str']
         t = data['user']['name'] + ": " + data['text'] + " (" + data['created_at'] + ")"
@@ -56,71 +103,79 @@ class tStream(TwythonStreamer):
                 full_text = data['retweeted_status']['text']
 
         #format for reddit
-        full_text = full_text.replace('&amp;', '&')
-        i = 0
-        while(i < len(full_text)-1):
-            if(full_text[i] == '\n'):
-                if(full_text[i+1] !='\n'):
-                    modified = full_text[:i] + "  " + full_text[i:]
-                    full_text = modified
-                    i = i + 2
-                else:
-                    while(i < len(full_text)-1 and full_text[i+1] == '\n'):
-                        i = i + 1
-                i = i + 1
-                modified = full_text[:i] + '>' + full_text[i:]
-                full_text = modified
-            i = i + 1
+        full_text = reddit_format(full_text)
 
-        media = "Coming soon!"
+        in_response_to = 'None (note: feature only works with retweets ATM)  '
+        #TODO make this work with replies
+        if('quoted_status' in data):
+            if('extended_tweet' in data['quoted_status']):
+                in_response_to = reddit_format(data['quoted_status']['extended_tweet']['full_text'])
+                in_response_to = '\n\n' + in_response_to + '\n'
+            elif('text' in data['quoted_status']):
+                in_response_to = reddit_format(data['quoted_status']['text'])
+                in_response_to = '\n\n' + in_response_to + '\n'
+        #elif('in_reply_to_status_id' in data):
         #TODO
-        #if('extended_entities' in data):
-        #    if('media' in data['extended_entities']):
-        #        media = data['extended_entities']['media']['media_url']
-        post = subreddit.submit(title=t, url=u)
-        post.reply(">%s    \n\nAuthor: %s    \nTime: %s    \nLocation: %s    \nVia: %s    \nMedia: %s" %(full_text, data['user']['name'], data['created_at'], data['geo'], 'Coming soon!', media))
+        #    in_response_to = api.show_status(id=data['in_reply_to_status_id'])
+        #    print("IN RESPONSE TO")
+        #    print(in_response_to)
 
-#        for i in data:
-#            if(type(data[i] == 'list')):
-#                for j in data[i]:
-#                    print("\t", j, repr(data[j]).encode('utf-8'))
-#            print(i, repr(data[i]).encode('utf-8'))
-#        self.save_to_csv(data)
+        media = 'None'
+        if('entities' in data):
+            if('media' in data['entities']):
+                if('media_url_https' in data['entities']['media'][0]):
+                    media = data['entities']['media'][0]['media_url_https']
+
+        if(not NoPost):
+            post = subreddit.submit(title=t, url=u)
+            post.reply("%s    \n\nIn response to: %s\nAuthor: %s    \nTime: %s    \nLocation: %s    \nVia: %s    \nMedia: %s" %(full_text, in_response_to, data['user']['name'], data['created_at'], data['geo'], 'Coming soon!', media))
+#           self.save_to_csv(data)
     
     def on_error(self, status_code, data):
         print(status_code)
     
     def on_success(self, data):
-        if(data['user']['id_str'] in followers):
+        if(data['user']['id_str'] in self.followers):
             if(data['lang'] == 'en' or data['lang'] == 'und'):
                 self.PostTweetToReddit(data)
+                f = open("json","w+")
+                f.write(json.dumps(data, indent=4))
+                f.close
 
-#    def on_timeout(self):
-#        print("Stream timeout")
 #   TODO
 #    def save_to_csv(self, tweet):
 #        with open(r'tweet_archive.csv', 'a') as file:
 #            csv.writer(file).writerow(list(tweet.values))
 
-stream = tStream(cons_key, cons_secret, access_key, access_secret, 5, 0)
-#stream = tStream(cons_key, cons_secret, access_key, access_secret, 0, 5)
-try:
-    stream.statuses.filter(follow=followers)
-except KeyboardInterrupt:
-    print('')
-    print("Keyboard Interrupt")
-#   TODO
-#except ConnectionError as e:
-#    sys.stderr.write("Disconnected from server, retrying")
-#    sleep(1000)
-    #stream.statuses.filter(follow=followers)
-except Exception as e:
-    print(repr(e))
-    print(e.args[0])
-    message = (type(e).__name__, e.args)
-    print message
-#    sys.stderr.write("Unexpected exception: %s\n"%(str(e)))
-finally:
-    print("Disconnecting stream")
-    stream.disconnect()
+def stream(followers):
+    print("Starting Tweet Archiver at %s" %datetime.datetime.now())
+    stream = tStream(cons_key, cons_secret, access_key, access_secret, 5, 0)
+    stream.set_followers(followers)
+    retry = True
+    try:
+        stream.statuses.filter(follow=followers)
+    except Exception as e:
+        message = (type(e).__name__, e.args)
+        print message
+    except KeyboardInterrupt:
+        print('')
+        print("Keyboard Interrupt")
+        retry = False
+    #    sys.stderr.write("Unexpected exception: %s\n"%(str(e)))
+    finally:
+        print("Disconnecting stream at %s" %datetime.datetime.now())
+        stream.disconnect()
+        return retry
+
+def main():
+    followers = getFollowers()
+    while(True):
+        retry = stream(followers)
+        if(not retry):
+            break
+        print('Tweet archiver doesn\'t feel like working, retrying in 5 seconds')
+        print('')
+        time.sleep(5);
+
+main()
 
