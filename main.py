@@ -6,6 +6,8 @@ import praw
 import twitter
 import json
 import urllib2
+import csv
+from twython import Twython
 from twython import TwythonStreamer
 from string import Template
 
@@ -40,6 +42,9 @@ api = twitter.Api(consumer_key=cons_key,
         sleep_on_rate_limit=True)
 
 api.VerifyCredentials()
+
+twython = Twython(cons_key, cons_secret, access_key, access_secret)
+#twython = Twython(cons_key, ACCESS_TOKEN)
 
 bot = praw.Reddit(user_agent='TweetArchiveBotv0.1',
         client_id= os.environ.get("BOT_CLIENT_ID"),
@@ -80,18 +85,36 @@ def reddit_format(text):
             i = i + 1
         return text
 
+def get_user(data):
+    return (twython.show_user(id=data['user_id']))['screen_name']
+
 class tStream(TwythonStreamer):
     followers = []
 
     def set_followers(self, followers):
         self.followers = followers
 
+    def PostDeleteToReddit(self, data):
+        try:
+            user = get_user(data['delete']['status'])
+            t = (">> Tweet deleted by %s at %s.  ID: %s" %(user, datetime.datetime.now(), data['delete']['status']['id_str']))
+            print("Submitting to /r/" + subreddit.display_name + ":\'" + t)
+            post = subreddit.submit(title=t, selftext='Actual deleted tweet information will be implemented soon, sorry ):')
+        except Exception as e:
+            print('')
+            print("TA has encountered a strange tweet it doesn't know how to deal with, logging JSON in tweet_fail.json")
+            print(str(e))
+            f = open("tweet_fail.json","w+")
+            f.write(json.dumps(data, indent=4))
+            f.close
+
+
     def PostTweetToReddit(self, data):
         u = "https://twitter.com/" + data['user']['screen_name'] + "/status/" + data['id_str']
         t = data['user']['name'] + ": " + data['text'] + " (" + data['created_at'] + ")"
         t = t.replace('&amp;', '&')
-        print("Submitting to /r/" + subreddit.display_name + ":\'" + t + "\' at " + u)
         print('')
+        print("Submitting to /r/" + subreddit.display_name + ":\'" + t + "\' at " + u)
 
         full_text = data['text']
         if('extended_tweet' in data):
@@ -101,9 +124,6 @@ class tStream(TwythonStreamer):
                 full_text = data['retweeted_status']['extended_tweet']['full_text']
             else:
                 full_text = data['retweeted_status']['text']
-
-        #format for reddit
-        full_text = reddit_format(full_text)
 
         in_response_to = 'None (note: feature only works with retweets ATM)  '
         #TODO make this work with replies
@@ -128,24 +148,33 @@ class tStream(TwythonStreamer):
 
         if(not NoPost):
             post = subreddit.submit(title=t, url=u)
-            post.reply("%s    \n\nIn response to: %s\nAuthor: %s    \nTime: %s    \nLocation: %s    \nVia: %s    \nMedia: %s" %(full_text, in_response_to, data['user']['name'], data['created_at'], data['geo'], 'Coming soon!', media))
-#           self.save_to_csv(data)
+            post.reply("%s    \n\nIn response to: %s\nAuthor: %s    \nTime: %s    \nLocation: %s    \nVia: %s    \nMedia: %s" %(reddit_format(full_text), in_response_to, data['user']['name'], data['created_at'], data['geo'], 'Coming soon!', media))
+        with open('archive.csv', 'w') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',')
+            t_id    = repr(data['id']).encode('utf-8')
+            t_t     = repr(full_text).encode('utf-8')
+            t_uid   = repr(data['user']['id']).encode('utf-8')
+            t_usn   = repr(data['user']['screen_name']).encode('utf-8')
+
+            csv_writer.writerow([t_id, t_t, t_uid, t_usn])
+#            for row in csv_reader:
+            #self.save_to_csv(data)
     
     def on_error(self, status_code, data):
         print(status_code)
     
     def on_success(self, data):
-        if(data['user']['id_str'] in self.followers):
-            if(data['lang'] == 'en' or data['lang'] == 'und'):
-                self.PostTweetToReddit(data)
-                f = open("json","w+")
-                f.write(json.dumps(data, indent=4))
-                f.close
-
-#   TODO
-#    def save_to_csv(self, tweet):
-#        with open(r'tweet_archive.csv', 'a') as file:
-#            csv.writer(file).writerow(list(tweet.values))
+        if('user' in data):
+            if(data['user']['id_str'] in self.followers):
+                if(data['lang'] == 'en' or data['lang'] == 'und'):
+                    self.PostTweetToReddit(data)
+        elif('delete' in data):
+            self.PostDeleteToReddit(data)
+        else:
+            print("TA has encountered a strange tweet it doesn't know how to deal with, logging JSON in tweet_fail.json")
+            f = open("tweet_fail.json","w+")
+            f.write(json.dumps(data, indent=4))
+            f.close
 
 def stream(followers):
     print("Starting Tweet Archiver at %s" %datetime.datetime.now())
