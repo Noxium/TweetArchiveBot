@@ -90,10 +90,10 @@ def get_user(data):
 def get_tweet_str(tweet_id):
     data = (twython.show_status(id=tweet_id))
     text = 'None'
-    if('extended_tweet' in data):
-        text = reddit_format(data['extended_tweet']['full_text'])
-    elif('text' in data):
+    if('text' in data):
         text = reddit_format(data['text'])
+    elif('extended_tweet' in data):
+        text = reddit_format(data['extended_tweet']['full_text'])
     text = '\n\n' + text + '\n'
     return text
 
@@ -107,6 +107,7 @@ class tStream(TwythonStreamer):
         try:
             user = get_user(data['delete']['status'])
             t = (">> Tweet deleted by %s at %s.  ID: %s" %(user, datetime.datetime.now(), data['delete']['status']['id_str']))
+            print('')
             print("Submitting to /r/" + subreddit.display_name + ":\'" + t)
             post = subreddit.submit(title=t, selftext='Actual deleted tweet information will be implemented soon, sorry ):')
         except Exception as e:
@@ -148,7 +149,6 @@ class tStream(TwythonStreamer):
                 in_response_to = reddit_format(data['quoted_status']['text'])
                 in_response_to = '\n\n' + in_response_to + '\n'
         elif(data['in_reply_to_status_id'] != None):
-            print(data['in_reply_to_status_id'])
             in_response_to = get_tweet_str(data['in_reply_to_status_id'])
         #TODO a bit inconsistent in how I handle these two cases
 
