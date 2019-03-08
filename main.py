@@ -44,7 +44,6 @@ api = twitter.Api(consumer_key=cons_key,
 api.VerifyCredentials()
 
 twython = Twython(cons_key, cons_secret, access_key, access_secret)
-#twython = Twython(cons_key, ACCESS_TOKEN)
 
 bot = praw.Reddit(user_agent='TweetArchiveBotv0.1',
         client_id= os.environ.get("BOT_CLIENT_ID"),
@@ -88,6 +87,16 @@ def reddit_format(text):
 def get_user(data):
     return (twython.show_user(id=data['user_id']))['screen_name']
 
+def get_tweet_str(tweet_id):
+    data = (twython.show_status(id=tweet_id))
+    text = 'None'
+    if('extended_tweet' in data):
+        text = reddit_format(data['extended_tweet']['full_text'])
+    elif('text' in data):
+        text = reddit_format(data['text'])
+    text = '\n\n' + text + '\n'
+    return text
+
 class tStream(TwythonStreamer):
     followers = []
 
@@ -110,6 +119,11 @@ class tStream(TwythonStreamer):
 
 
     def PostTweetToReddit(self, data):
+        print("saving tweet to json")
+        f = open("json","w+")
+        f.write(json.dumps(data, indent=4))
+        f.close
+
         u = "https://twitter.com/" + data['user']['screen_name'] + "/status/" + data['id_str']
         t = data['user']['name'] + ": " + data['text'] + " (" + data['created_at'] + ")"
         t = t.replace('&amp;', '&')
@@ -125,8 +139,7 @@ class tStream(TwythonStreamer):
             else:
                 full_text = data['retweeted_status']['text']
 
-        in_response_to = 'None (note: feature only works with retweets ATM)  '
-        #TODO make this work with replies
+        in_response_to = 'None  '
         if('quoted_status' in data):
             if('extended_tweet' in data['quoted_status']):
                 in_response_to = reddit_format(data['quoted_status']['extended_tweet']['full_text'])
@@ -134,11 +147,10 @@ class tStream(TwythonStreamer):
             elif('text' in data['quoted_status']):
                 in_response_to = reddit_format(data['quoted_status']['text'])
                 in_response_to = '\n\n' + in_response_to + '\n'
-        #elif('in_reply_to_status_id' in data):
-        #TODO
-        #    in_response_to = api.show_status(id=data['in_reply_to_status_id'])
-        #    print("IN RESPONSE TO")
-        #    print(in_response_to)
+        elif(data['in_reply_to_status_id'] != None):
+            print(data['in_reply_to_status_id'])
+            in_response_to = get_tweet_str(data['in_reply_to_status_id'])
+        #TODO a bit inconsistent in how I handle these two cases
 
         media = 'None'
         if('entities' in data):
@@ -199,9 +211,10 @@ def stream(followers):
 def main():
     followers = getFollowers()
     while(True):
-        retry = stream(followers)
-        if(not retry):
-            break
+        if(check_connection()):
+            retry = stream(followers)
+            if(not retry):
+                break
         print('Tweet archiver doesn\'t feel like working, retrying in 5 seconds')
         print('')
         time.sleep(5);
