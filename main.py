@@ -5,8 +5,9 @@ import time
 import praw
 import twitter
 import json
-import urllib2
 import csv
+from urllib.error import URLError
+from urllib.request import urlopen
 from flask import Flask, request
 from twython import Twython
 from twython import TwythonStreamer
@@ -17,9 +18,9 @@ app = Flask(__name__)
 
 def check_connection():
     try:
-        urllib2.urlopen('https://twitter.com/')
+        urlopen('https://twitter.com/')
         return True
-    except urllib2.URLError as e:
+    except URLError as e:
         return False
 for arg in sys.argv:
     if(arg.lower() == '-n'):
@@ -126,11 +127,6 @@ class tStream(TwythonStreamer):
 
 
     def PostTweetToReddit(self, data):
-        print("saving tweet to json")
-        f = open("json","w+")
-        f.write(json.dumps(data, indent=4))
-        f.close
-
         u = "https://twitter.com/" + data['user']['screen_name'] + "/status/" + data['id_str']
         t = data['user']['name'] + ": " + data['text'] + " (" + data['created_at'] + ")"
         t = t.replace('&amp;', '&')
@@ -203,7 +199,7 @@ def stream(followers):
         stream.statuses.filter(follow=followers)
     except Exception as e:
         message = (type(e).__name__, e.args)
-        print message
+        print(message)
     except KeyboardInterrupt:
         print('')
         print("Keyboard Interrupt")
