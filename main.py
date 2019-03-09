@@ -7,11 +7,13 @@ import twitter
 import json
 import urllib2
 import csv
+from flask import Flask, request
 from twython import Twython
 from twython import TwythonStreamer
 from string import Template
 
 NoPost = False
+app = Flask(__name__)
 
 def check_connection():
     try:
@@ -110,6 +112,10 @@ class tStream(TwythonStreamer):
             print('')
             print("Submitting to /r/" + subreddit.display_name + ":\'" + t)
             post = subreddit.submit(title=t, selftext='Actual deleted tweet information will be implemented soon, sorry ):')
+            #try:
+            #TODO get tweet from CSV
+            #except:
+            #    pass
         except Exception as e:
             print('')
             print("TA has encountered a strange tweet it doesn't know how to deal with, logging JSON in tweet_fail.json")
@@ -208,6 +214,7 @@ def stream(followers):
         stream.disconnect()
         return retry
 
+@app.route('/main')
 def main():
     followers = getFollowers()
     while(True):
@@ -219,5 +226,9 @@ def main():
         print('')
         time.sleep(5);
 
-main()
+#main()
+
+if(__name__) == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
 
