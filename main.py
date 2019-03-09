@@ -210,9 +210,10 @@ def stream(followers):
         stream.disconnect()
         return retry
 
-@app.route('/')
+"""@app.route('/')
 def web():
     return("Tweet Archiver")
+"""
 
 def main():
     followers = getFollowers()
@@ -225,9 +226,9 @@ def main():
         print('')
         time.sleep(5);
 
-if(__name__) == '__main__':
+"""if(__name__) == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
+"""
 main()
 
