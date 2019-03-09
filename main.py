@@ -224,9 +224,10 @@ def main():
         print('Tweet archiver doesn\'t feel like working, retrying in 5 seconds')
         print('')
         time.sleep(5);
-main()
 
 if(__name__) == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
+main()
 
