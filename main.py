@@ -137,11 +137,17 @@ class tStream(TwythonStreamer):
     def PostTweetToReddit(self, data, sub):
         u = "https://twitter.com/" + data['user']['screen_name'] + "/status/" + data['id_str']
         #t = data['user']['name'] + ": " + data['text'] + " (" + data['created_at'] + ")"
-        t = data['user']['name'] + ': '
+        t = data['user']['name']
         if('extended_tweet' in data):
-            t += data['extended_tweet']['full_text']
+            t += ': ' + data['extended_tweet']['full_text']
+        elif('retweeted_status' in data):
+            t += 'RT from ' + data['retweeted_status']['user']['name'] + ':'
+            if('extended_tweet' in data['retweeted_status']):
+                t += data['retweeted_status']['extended_tweet']['full_text']
+            else:
+                t += data['retweeted_status']['text']
         else:
-            t += data['text']
+            t += ': ' + data['text']
             
         # remove trailing URL if it contains one
         t = (t[:t.rindex('https')] if 't.co' in t.split()[-1] else t)
