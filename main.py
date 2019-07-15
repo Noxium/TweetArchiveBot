@@ -141,7 +141,7 @@ class tStream(TwythonStreamer):
         if('extended_tweet' in data):
             t += ': ' + data['extended_tweet']['full_text']
         elif('retweeted_status' in data):
-            t += 'RT from ' + data['retweeted_status']['user']['name'] + ':'
+            t += ' RT from ' + data['retweeted_status']['user']['name'] + ': '
             if('extended_tweet' in data['retweeted_status']):
                 t += data['retweeted_status']['extended_tweet']['full_text']
             else:
