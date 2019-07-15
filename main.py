@@ -115,7 +115,7 @@ class tStream(TwythonStreamer):
             t = (">> Tweet deleted by %s at %s.  ID: %s" %(user, datetime.datetime.now(), data['delete']['status']['id_str']))
             print('')
             print("Submitting to /r/" + sub.display_name + ":\'" + t)
-            post = sub.submit(title=t, selftext='Actual deleted tweet information will be implemented soon, sorry ):')
+            post = sub.submit(title=t, selftext='Annoyingly the Twitter API doesn\'t supply any actual information about deleted tweets other then it\'s ID, so for now the bets I can give you is a notification that a Tweet *has* been deleted.')
             #try:
             #TODO get tweet from CSV
             #except:
@@ -165,7 +165,7 @@ class tStream(TwythonStreamer):
 
         if(not NoPost):
             post = sub.submit(title=t, url=u)
-            post.reply("%s    \n\nIn response to: %s\nAuthor: %s    \nTime: %s    \nLocation: %s    \nVia: %s    \nMedia: %s" %(reddit_format(full_text), in_response_to, data['user']['name'], data['created_at'], data['geo'], 'Coming soon!', media))
+            post.reply("%s    \n\nIn response to: %s\nAuthor: %s    \nUser ID: %s    \nTweet ID: %s    \nTime: %s    \n\nMedia: %s" %(reddit_format(full_text), in_response_to, data['user']['name'], data['user']['id_str'], data['id], data['created_at'], media))
         with open('archive.csv', 'a') as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=',')
             t_id    = repr(data['id']).encode('utf-8')
