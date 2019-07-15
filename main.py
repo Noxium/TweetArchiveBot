@@ -57,7 +57,12 @@ bot = praw.Reddit(user_agent='TweetArchiveBotv0.1',
 
 TA_sub = bot.subreddit('TweetArchiver')
 LRSA_sub = bot.subreddit('LibertyRSA')
-LRSA_users = ["1102688148314877953"] # @ArchiverTest
+# hardcoding user IDs because I'm a terrible person
+LRSA_users = ["1094520287230611458",    # @ProgressRSA
+              "1011523744827928577",    # @mynameisjerm
+              "183594399",              # @BigDaddyLiberty
+              "468657789",              # @tvalberts
+              "889545734"]              # unathi_kwaza
 
 #comments = subreddit.stream.comments()
 
