@@ -55,7 +55,9 @@ bot = praw.Reddit(user_agent='TweetArchiveBotv0.1',
         password=os.environ.get("BOT_PASSWORD"))
 
 
-subreddit = bot.subreddit('TweetArchiver')
+TA_sub = bot.subreddit('TweetArchiver')
+LRSA_sub = bot.subreddit('LibertyRSA')
+LRSA_users = ["ArchiverTest"]
 #comments = subreddit.stream.comments()
 
 def getFollowers():
@@ -106,13 +108,13 @@ class tStream(TwythonStreamer):
     def set_followers(self, followers):
         self.followers = followers
 
-    def PostDeleteToReddit(self, data):
+    def PostDeleteToReddit(self, data, sub):
         try:
             user = get_user(data['delete']['status'])
             t = (">> Tweet deleted by %s at %s.  ID: %s" %(user, datetime.datetime.now(), data['delete']['status']['id_str']))
             print('')
-            print("Submitting to /r/" + subreddit.display_name + ":\'" + t)
-            post = subreddit.submit(title=t, selftext='Actual deleted tweet information will be implemented soon, sorry ):')
+            print("Submitting to /r/" + sub.display_name + ":\'" + t)
+            post = sub.submit(title=t, selftext='Actual deleted tweet information will be implemented soon, sorry ):')
             #try:
             #TODO get tweet from CSV
             #except:
@@ -126,12 +128,12 @@ class tStream(TwythonStreamer):
             f.close
 
 
-    def PostTweetToReddit(self, data):
+    def PostTweetToReddit(self, data, sub):
         u = "https://twitter.com/" + data['user']['screen_name'] + "/status/" + data['id_str']
         t = data['user']['name'] + ": " + data['text'] + " (" + data['created_at'] + ")"
         t = t.replace('&amp;', '&')
         print('')
-        print("Submitting to /r/" + subreddit.display_name + ":\'" + t + "\' at " + u)
+        print("Submitting to /r/" + sub.display_name + ":\'" + t + "\' at " + u)
 
         full_text = data['text']
         if('extended_tweet' in data):
@@ -161,7 +163,7 @@ class tStream(TwythonStreamer):
                     media = data['entities']['media'][0]['media_url_https']
 
         if(not NoPost):
-            post = subreddit.submit(title=t, url=u)
+            post = sub.submit(title=t, url=u)
             post.reply("%s    \n\nIn response to: %s\nAuthor: %s    \nTime: %s    \nLocation: %s    \nVia: %s    \nMedia: %s" %(reddit_format(full_text), in_response_to, data['user']['name'], data['created_at'], data['geo'], 'Coming soon!', media))
         with open('archive.csv', 'a') as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=',')
@@ -179,11 +181,16 @@ class tStream(TwythonStreamer):
     
     def on_success(self, data):
         if('user' in data):
-            if(data['user']['id_str'] in self.followers):
+            if(data['user']['id_str'] in LRSA_users:
+                self.PostTweetToReddit(data, LSRA_sub)
+            elif(data['user']['id_str'] in self.followers):
                 if(data['lang'] == 'en' or data['lang'] == 'und'):
-                    self.PostTweetToReddit(data)
+                    self.PostTweetToReddit(data, TA_sub)
         elif('delete' in data):
-            self.PostDeleteToReddit(data)
+            if(data['delete']['status']['id_str'] in LRSA_users):
+                self.PostDeleteToReddit(data, LRSA_sub)
+            else:
+                self.PostDeleteToReddit(data, TA_sub)
         else:
             print("TA has encountered a strange tweet it doesn't know how to deal with, logging JSON in tweet_fail.json")
             f = open("tweet_fail.json","w+")
