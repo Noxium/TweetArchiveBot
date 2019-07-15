@@ -120,7 +120,7 @@ class tStream(TwythonStreamer):
             t = (">> Tweet deleted by %s at %s.  ID: %s" %(user, datetime.datetime.now(), data['delete']['status']['id_str']))
             print('')
             print("Submitting to /r/" + sub.display_name + ":\'" + t)
-            post = sub.submit(title=t, selftext='Annoyingly the Twitter API doesn\'t supply any actual information about deleted tweets other then it\'s ID, so for now the bets I can give you is a notification that a Tweet *has* been deleted.')
+            post = sub.submit(title=t, selftext='Annoyingly the Twitter API doesn\'t supply any actual information about deleted tweets other then it\'s ID, so for now the best I can do is give you a notification that some Tweet *has* been deleted.')
             #try:
             #TODO get tweet from CSV
             #except:
