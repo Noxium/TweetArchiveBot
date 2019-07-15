@@ -165,7 +165,7 @@ class tStream(TwythonStreamer):
 
         if(not NoPost):
             post = sub.submit(title=t, url=u)
-            post.reply("%s    \n\nIn response to: %s\nAuthor: %s    \nUser ID: %s    \nTweet ID: %s    \nTime: %s    \n\nMedia: %s" %(reddit_format(full_text), in_response_to, data['user']['name'], data['user']['id_str'], data['id], data['created_at'], media))
+            post.reply("%s    \n\nIn response to: %s\nAuthor: %s    \nUser ID: %s    \nTweet ID: %s    \nTime: %s    \n\nMedia: %s" %(reddit_format(full_text), in_response_to, data['user']['name'], data['user']['id_str'], data['id'], data['created_at'], media))
         with open('archive.csv', 'a') as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=',')
             t_id    = repr(data['id']).encode('utf-8')
