@@ -57,7 +57,8 @@ bot = praw.Reddit(user_agent='TweetArchiveBotv0.1',
 
 TA_sub = bot.subreddit('TweetArchiver')
 LRSA_sub = bot.subreddit('LibertyRSA')
-LRSA_users = ["ArchiverTest"]
+LRSA_users = ["1102688148314877953"] # @ArchiverTest
+
 #comments = subreddit.stream.comments()
 
 def getFollowers():
