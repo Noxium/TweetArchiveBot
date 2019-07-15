@@ -136,8 +136,21 @@ class tStream(TwythonStreamer):
 
     def PostTweetToReddit(self, data, sub):
         u = "https://twitter.com/" + data['user']['screen_name'] + "/status/" + data['id_str']
-        t = data['user']['name'] + ": " + data['text'] + " (" + data['created_at'] + ")"
+        #t = data['user']['name'] + ": " + data['text'] + " (" + data['created_at'] + ")"
+        t = data['user']['name'] + ': '
+        if('extended_tweet' in data['retweeted_status']):
+            t += data['retweeted_status']['extended_tweet']['full_text']
+        else:
+            t += data['retweeted_status']['text']
+            
+        # remove trailing URL if it contains one
+        t = (t[:t.rindex('https')] if 't.co' in t.split()[-1] else t)
+        # replace '&amp' with '&'
         t = t.replace('&amp;', '&')
+        # add '...' if post title is too long
+        char_limit = 300
+        t = t[:char_limit - 3] + '...' if len(t) > char_limit else t
+        
         print('')
         print("Submitting to /r/" + sub.display_name + ":\'" + t + "\' at " + u)
 
