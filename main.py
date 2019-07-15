@@ -183,7 +183,7 @@ class tStream(TwythonStreamer):
     def on_success(self, data):
         if('user' in data):
             if(data['user']['id_str'] in LRSA_users):
-                self.PostTweetToReddit(data, LSRA_sub)
+                self.PostTweetToReddit(data, LRSA_sub)
             elif(data['user']['id_str'] in self.followers):
                 if(data['lang'] == 'en' or data['lang'] == 'und'):
                     self.PostTweetToReddit(data, TA_sub)
