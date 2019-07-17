@@ -62,7 +62,11 @@ LRSA_users = ["1094520287230611458",    # @ProgressRSA
               "1011523744827928577",    # @mynameisjerm
               "183594399",              # @BigDaddyLiberty
               "468657789",              # @tvalberts
-              "889545734"]              # unathi_kwaza
+              "889545734"]              # @unathi_kwaza
+Prequel_sub = bot.subreddit('Prequel')
+# hardcoding user IDs because I'm a terrible person
+Prequel_users = ["346883155",           # @PrequelComic
+              "1102688148314877953"]
 
 #comments = subreddit.stream.comments()
 
@@ -208,12 +212,16 @@ class tStream(TwythonStreamer):
         if('user' in data):
             if(data['user']['id_str'] in LRSA_users):
                 self.PostTweetToReddit(data, LRSA_sub)
+            elif(data['user']['id_str'] in Prequel_users):
+                self.PostTweetToReddit(data, Prequel_sub)
             elif(data['user']['id_str'] in self.followers):
                 if(data['lang'] == 'en' or data['lang'] == 'und'):
                     self.PostTweetToReddit(data, TA_sub)
         elif('delete' in data):
             if(data['delete']['status']['id_str'] in LRSA_users):
                 self.PostDeleteToReddit(data, LRSA_sub)
+            elif(data['delete']['status']['id_str'] in Prequel_users):
+                self.PostDeleteToReddit(data, Prequel_sub)
             else:
                 self.PostDeleteToReddit(data, TA_sub)
         else:
