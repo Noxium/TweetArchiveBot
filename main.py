@@ -65,8 +65,7 @@ LRSA_users = ["1094520287230611458",    # @ProgressRSA
               "889545734"]              # @unathi_kwaza
 Prequel_sub = bot.subreddit('Prequel')
 # hardcoding user IDs because I'm a terrible person
-Prequel_users = ["346883155",           # @PrequelComic
-              "1102688148314877953"]
+Prequel_users = ["346883155"]           # @PrequelComic
 
 #comments = subreddit.stream.comments()
 
