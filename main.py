@@ -62,7 +62,8 @@ LRSA_users = ["1094520287230611458",    # @ProgressRSA
               "1011523744827928577",    # @mynameisjerm
               "183594399",              # @BigDaddyLiberty
               "468657789",              # @tvalberts
-              "889545734"]              # @unathi_kwaza
+              "889545734",              # @unathi_kwaza
+              "809614172"]              # @willempet
 Prequel_sub = bot.subreddit('Prequel')
 # hardcoding user IDs because I'm a terrible person
 Prequel_users = ["346883155"]           # @PrequelComic
