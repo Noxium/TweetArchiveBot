@@ -220,7 +220,6 @@ class tStream(TwythonStreamer):
                 if(data['lang'] == 'en' or data['lang'] == 'es' or data['lang'] == 'und'):
                     self.PostTweetToReddit(data, TA_sub)
         elif('delete' in data):
-            print(data['delete']['status']['user_id_str'])
             if(data['delete']['status']['user_id_str'] in LRSA_users):
                 self.PostDeleteToReddit(data, LRSA_sub)
             elif(data['delete']['status']['user_id_str'] in Prequel_users):
