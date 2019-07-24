@@ -28,7 +28,7 @@ for arg in sys.argv:
         print("---Posting disabled")
 
 if(not check_connection()):
-    print('Twitter is down or (more likely) yo internet broke')
+    print('Twitter is down or your internet is down')
     sys.exit(1)
     
 name = 'TweetArchiveBot'
@@ -217,7 +217,7 @@ class tStream(TwythonStreamer):
             elif(data['user']['id_str'] in Prequel_users):
                 self.PostTweetToReddit(data, Prequel_sub)
             elif(data['user']['id_str'] in self.followers):
-                if(data['lang'] == 'en' or data['lang'] == 'und'):
+                if(data['lang'] == 'en' or data['lang'] == 'es' or data['lang'] == 'und'):
                     self.PostTweetToReddit(data, TA_sub)
         elif('delete' in data):
             if(data['delete']['status']['id_str'] in LRSA_users):
@@ -246,16 +246,10 @@ def stream(followers):
         print('')
         print("Keyboard Interrupt")
         retry = False
-    #    sys.stderr.write("Unexpected exception: %s\n"%(str(e)))
     finally:
         print("Disconnecting stream at %s" %datetime.datetime.now())
         stream.disconnect()
         return retry
-
-"""@app.route('/')
-def web():
-    return("Tweet Archiver")
-"""
 
 def main():
     followers = getFollowers()
@@ -267,10 +261,6 @@ def main():
         print('Tweet archiver doesn\'t feel like working, retrying in 5 seconds')
         print('')
         time.sleep(5);
-
-"""if(__name__) == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
-"""
+        
 main()
 
