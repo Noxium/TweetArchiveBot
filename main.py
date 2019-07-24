@@ -221,7 +221,7 @@ class tStream(TwythonStreamer):
                     self.PostTweetToReddit(data, TA_sub)
         elif('delete' in data):
             print("delete detected, printing json starting from data[\'delete\']") 
-            for d in data['delete']:
+            for d in data['delete']['status']:
                 print(d)
             if(data['delete']['status']['id_str'] in LRSA_users):
                 self.PostDeleteToReddit(data, LRSA_sub)
