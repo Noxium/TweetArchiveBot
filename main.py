@@ -198,7 +198,7 @@ class tStream(TwythonStreamer):
             reply_body = "%s    \n\nIn response to: %s\nAuthor: %s    \nUser ID: %s    \nTweet ID: %s    \nTime: %s    \n\nMedia: %s" %(reddit_format(full_text), in_response_to, data['user']['name'], data['user']['id_str'], data['id'], data['created_at'], media)
             reply_body += "\n\n--Maintained by /u/Noxium51"
             post.reply(reply_body)
-        with open('archive.csv', 'a') as csv_file:
+        """with open('archive.csv', 'a') as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=',')
             t_id    = repr(data['id']).encode('utf-8')
             t_t     = repr(full_text).encode('utf-8')
@@ -208,6 +208,7 @@ class tStream(TwythonStreamer):
             csv_writer.writerow([t_id, t_t, t_uid, t_usn])
 #            for row in csv_reader:
             #self.save_to_csv(data)
+        """
     
     def on_error(self, status_code, data):
         print(status_code)
