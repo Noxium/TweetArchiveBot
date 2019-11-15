@@ -196,7 +196,7 @@ class tStream(TwythonStreamer):
         if(not NoPost):
             post = sub.submit(title=t, url=u)
             reply_body = "%s    \n\nIn response to: %s\nAuthor: %s    \nUser ID: %s    \nTweet ID: %s    \nTime: %s    \n\nMedia: %s" %(reddit_format(full_text), in_response_to, data['user']['name'], data['user']['id_str'], data['id'], data['created_at'], media)
-            reply_body += "\n\nEpstein didn't kill himself"
+            reply_body += "\n\nMaintained by Noxium51"
             post.reply(reply_body)
         """with open('archive.csv', 'a') as csv_file:
             csv_writer = csv.writer(csv_file, delimiter=',')
@@ -217,16 +217,16 @@ class tStream(TwythonStreamer):
         if('user' in data):
             if(data['user']['id_str'] in LRSA_users):
                 self.PostTweetToReddit(data, LRSA_sub)
-            elif(data['user']['id_str'] in Prequel_users):
-                self.PostTweetToReddit(data, Prequel_sub)
+            #elif(data['user']['id_str'] in Prequel_users):
+                #self.PostTweetToReddit(data, Prequel_sub)
             elif(data['user']['id_str'] in self.followers):
                 if(data['lang'] == 'en' or data['lang'] == 'es' or data['lang'] == 'und'):
                     self.PostTweetToReddit(data, TA_sub)
         elif('delete' in data):
             if(data['delete']['status']['user_id_str'] in LRSA_users):
                 self.PostDeleteToReddit(data, LRSA_sub)
-            elif(data['delete']['status']['user_id_str'] in Prequel_users):
-                self.PostDeleteToReddit(data, Prequel_sub)
+            #elif(data['delete']['status']['user_id_str'] in Prequel_users):
+                #self.PostDeleteToReddit(data, Prequel_sub)
             else:
                 self.PostDeleteToReddit(data, TA_sub)
         else:
